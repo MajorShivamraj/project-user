@@ -1,0 +1,70 @@
+#include <bits/stdc++.h>
+using namespace std;
+
+int n;
+vector<vector<int>> dist;
+int bestCost = INT_MAX;
+vector<int> bestPath;
+
+// Recursive function to try all permutations (with pruning)
+void tsp(vector<int> &path, vector<bool> &visited, int costSoFar) {
+    if (path.size() == n) {
+        costSoFar += dist[path.back()][path[0]]; // return to start
+        if (costSoFar < bestCost) {
+            bestCost = costSoFar;
+            bestPath = path;
+        }
+        return;
+    }
+
+    for (int i = 0; i < n; i++) {
+        if (!visited[i]) {
+            visited[i] = true;
+            path.push_back(i);
+            if (costSoFar + dist[path[path.size()-2]][i] < bestCost) // prune
+                tsp(path, visited, costSoFar + dist[path[path.size()-2]][i]);
+            path.pop_back();
+            visited[i] = false;
+        }
+    }
+}
+
+int main() {
+    cout << "Enter number of cities: ";
+    cin >> n;
+    dist.assign(n, vector<int>(n));
+    cout << "Enter distance matrix:\n";
+    for (int i = 0; i < n; i++)
+        for (int j = 0; j < n; j++)
+            cin >> dist[i][j];
+
+    vector<int> path = {0};
+    vector<bool> visited(n, false);
+    visited[0] = true;
+    tsp(path, visited, 0);
+
+    cout << "\nOptimal route:\n";
+    for (int city : bestPath) cout << city << " -> ";
+    cout << bestPath[0] << "\nTotal cost: " << bestCost << endl;
+}
+
+
+
+
+
+
+
+input:
+Enter number cities : 4
+Enter distance matrix :
+0  10  15  20
+10  0  35  25
+15 35   0  30
+20 25  30   0
+
+
+explanation:
+Row 0 → distances from city 0 to all cities: 0, 10, 15, 20
+Row 1 → distances from city 1 to all cities: 10, 0, 35, 25
+Row 2 → distances from city 2 to all cities: 15, 35, 0, 30
+Row 3 → distances from city 3 to all cities: 20, 25, 30, 0

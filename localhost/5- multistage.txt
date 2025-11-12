@@ -1,0 +1,87 @@
+#include <bits/stdc++.h>
+using namespace std;
+
+int main() {
+    int stages;
+    cout << "Enter number of stages: ";
+    cin >> stages;
+
+    vector<int> nodesInStage(stages);
+    cout << "Enter number of nodes in each stage:\n";
+    for(int i = 0; i < stages; i++)
+        cin >> nodesInStage[i];
+
+    // Total nodes in all stages
+    int totalNodes = accumulate(nodesInStage.begin(), nodesInStage.end(), 0);
+
+    // Cost adjacency matrix: cost[i][j] = cost from node i to node j
+    vector<vector<int>> cost(totalNodes, vector<int>(totalNodes, INT_MAX));
+
+    cout << "Enter number of edges: ";
+    int edges;
+    cin >> edges;
+    cout << "Enter edges as (from to cost):\n";
+    for(int i = 0; i < edges; i++){
+        int u, v, c;
+        cin >> u >> v >> c;
+        cost[u][v] = c;  // Directed edge
+    }
+
+    // DP array: dp[i] = min cost from stage i to last stage
+    vector<int> dp(totalNodes, INT_MAX);
+    vector<int> nextNode(totalNodes, -1); // to reconstruct path
+
+    // Last stage nodes cost = 0 to finish
+    int startLast = totalNodes - nodesInStage.back();
+    for(int i = startLast; i < totalNodes; i++)
+        dp[i] = 0;
+
+    // Process stages from second last to first
+    int nodeIndex = totalNodes;
+    for(int s = stages - 2; s >= 0; s--){
+        int startCurr = nodeIndex - nodesInStage[s] - nodesInStage[s+1];
+        int endCurr = startCurr + nodesInStage[s];
+        int startNext = endCurr;
+        int endNext = startNext + nodesInStage[s+1];
+
+        for(int i = startCurr; i < endCurr; i++){
+            for(int j = startNext; j < endNext; j++){
+                if(cost[i][j] != INT_MAX && dp[i] > cost[i][j] + dp[j]){
+                    dp[i] = cost[i][j] + dp[j];
+                    nextNode[i] = j;
+                }
+            }
+        }
+        nodeIndex = startCurr;
+    }
+
+    // Reconstruct path starting from first node (0)
+    cout << "\nOptimal path:\n";
+    int curr = 0;
+    while(curr != -1){
+        cout << curr;
+        curr = nextNode[curr];
+        if(curr != -1) cout << " -> ";
+    }
+    cout << "\nMinimum cost: " << dp[0] << endl;
+
+    return 0;
+}
+
+
+
+
+
+input:
+Enter number of stages: 
+3
+Enter number of nodes in each stage:
+2 2 1
+Enter number of edges:
+5
+Enter edges as (from to cost):
+0 2 3
+0 3 2
+1 2 6
+1 3 1
+2 4 4

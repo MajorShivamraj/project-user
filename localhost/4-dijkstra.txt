@@ -1,0 +1,144 @@
+#include <bits/stdc++.h>
+using namespace std;
+
+void dijkstra(int source, vector<vector<pair<int,int>>> &graph, vector<int> &dist, vector<int> &parent) {
+    int V = graph.size();	
+    dist.assign(V, INT_MAX);
+    parent.assign(V, -1);
+    dist[source] = 0;
+    priority_queue<pair<int,int>, vector<pair<int,int>>, greater<pair<int,int>>> pq;
+    pq.push({0, source});
+
+    while (!pq.empty()) {
+        int u = pq.top().second;
+        int d = pq.top().first;
+        pq.pop();
+        if (d > dist[u]) continue;
+        for (auto &edge : graph[u]) {
+            int v = edge.first;
+            int w = edge.second;
+            if (dist[v] > dist[u] + w) {
+                dist[v] = dist[u] + w;
+                parent[v] = u; // store previous node to rebuild path
+                pq.push({dist[v], v});
+            }
+        }
+    }
+}
+
+void printPath(int dest, const vector<int> &parent) {
+    if (dest == -1) return;
+    if (parent[dest] != -1)  // if there is a previous node
+        printPath(parent[dest], parent); // print path to parent first
+    cout << dest << " "; // then print current node
+}
+
+int main() {
+    int V, E;
+    cout << "Enter number of intersections (vertices): ";
+    cin >> V;
+    cout << "Enter number of roads (edges): ";
+    cin >> E;
+    vector<vector<pair<int,int>>> graph(V);
+
+    cout << "Enter roads (u v w):\n";
+    for (int i = 0; i < E; i++) {
+        int u, v, w;
+        cin >> u >> v >> w;
+        graph[u].push_back({v, w});
+        graph[v].push_back({u, w}); // undirected
+    }
+    int source;
+    cout << "Enter ambulance start location (source): ";
+    cin >> source;
+    int H;
+    cout << "Enter number of hospitals: ";
+    cin >> H;
+    vector<int> hospitals(H);
+    cout << "Enter hospital nodes: ";
+    for (int i = 0; i < H; i++) cin >> hospitals[i];
+    vector<int> dist, parent;
+    dijkstra(source, graph, dist, parent);
+
+    int minTime = INT_MAX, nearestHospital = -1;
+    for (int h : hospitals) {
+        if (dist[h] < minTime) {
+            minTime = dist[h];
+            nearestHospital = h;
+        }
+    }
+    if (nearestHospital == -1) {
+        cout << "No hospital reachable.\n";
+        return 0;
+    }
+    cout << "\nNearest hospital is at node " << nearestHospital
+         << " with travel time " << minTime << " minutes.\n";
+    cout << "Optimal path: ";
+printPath(nearestHospital, parent);
+cout << "\n";
+
+    // ---------- Dynamic Weight Updates ----------
+    while (true) {
+        int u, v, newW;
+        cout << "\nEnter road to update (u v new_weight) or -1 to stop: ";
+        cin >> u;
+        if (u == -1) break;
+        cin >> v >> newW;
+        // Update both directions (since roads are undirected)
+        for (auto &edge : graph[u]) if (edge.first == v) edge.second = newW;
+        for (auto &edge : graph[v]) if (edge.first == u) edge.second = newW;
+        // Re-run Dijkstra after traffic update
+        dijkstra(source, graph, dist, parent);
+        // Recalculate nearest hospital
+        minTime = INT_MAX;
+        nearestHospital = -1;
+        for (int h : hospitals)
+            if (dist[h] < minTime) {
+                minTime = dist[h];
+                nearestHospital = h;
+            }
+        if (nearestHospital == -1)
+            cout << "No hospital reachable.\n";
+        else {
+            cout << "\nAfter update, nearest hospital is at node " << nearestHospital
+                 << " with travel time " << minTime << " minutes.\n";
+            cout << "Optimal path: ";
+printPath(nearestHospital, parent);
+cout << "\n";
+        }
+    }
+    return 0;
+}
+
+
+
+
+Input format :
+Enter number of intersections (vertices): 6
+Enter number of roads (edges): 7
+Enter roads (u v w):
+0 1 4
+0 2 2
+1 2 1
+1 3 7
+2 3 3
+2 4 5
+4 5 1
+Enter ambulance start location (source): 0
+Enter number of hospitals: 2
+Enter hospital nodes: 3 5
+
+Nearest hospital is at node 3 with travel time 5 minutes.
+Optimal path: 0 2 3 
+
+Enter road to update (u v new_weight) or -1 to stop: 2 3 20
+
+After update, nearest hospital is at node 5 with travel time 8 minutes.
+Optimal path: 0 2 4 5
+
+
+
+
+greedy approach + priority_queue (which acts as a min-heap (which always gives the minimum element))
+time= O((V+E)logV) [extraction costs VlogV, relaxation costs ElogV; (V+E)(logV)]
+space O(V+E)

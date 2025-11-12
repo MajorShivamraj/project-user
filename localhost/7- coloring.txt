@@ -1,0 +1,65 @@
+#include <bits/stdc++.h>
+using namespace std;
+
+// Function to assign exam slots (colors) to courses
+void graphColoring(vector<vector<int>> &graph, int N) {
+    vector<int> result(N, -1); // Stores assigned slot for each course
+    result[0] = 0; // Assign first slot to first course
+    // Assign slots to remaining courses
+    for (int u = 1; u < N; u++) {
+        vector<bool> available(N, true); // Track available slots
+        // Mark slots of adjacent courses as unavailable
+        for (int v = 0; v < N; v++) {
+            if (graph[u][v] && result[v] != -1)
+                available[result[v]] = false;
+        }
+        // Assign the first available slot
+        for (int slot = 0; slot < N; slot++) {
+            if (available[slot]) {
+                result[u] = slot;
+                break;
+            }
+        }
+    }
+    // Output the assigned slots
+    cout << "Course -> Slot\n";
+    for (int i = 0; i < N; i++) {
+        cout << "Course " << i+1 << " -> Slot " << result[i]+1 << endl;
+    }
+    // Find number of slots used
+    int maxSlot = *max_element(result.begin(), result.end());
+    cout << "Total slots needed: " << maxSlot+1 << endl;
+}
+int main() {
+    int N; // Number of courses
+    cout << "Enter number of courses: ";
+    cin >> N;
+    vector<vector<int>> graph(N, vector<int>(N, 0));
+    cout << "Enter conflict matrix (1 if courses conflict, 0 otherwise):\n";
+    for (int i = 0; i < N; i++)
+        for (int j = 0; j < N; j++)
+            cin >> graph[i][j];
+    graphColoring(graph, N);
+    return 0;
+}
+
+
+
+
+
+input :
+5
+Math Physics Chemistry English History
+6
+0 1
+0 2
+1 2
+1 3
+2 4
+3 4
+
+
+
+greedy + backtracking
+time = O(m^V) [m=colors , V=vertices]
+space = O(V+E)

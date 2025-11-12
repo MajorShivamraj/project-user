@@ -1,0 +1,86 @@
+#include <iostream>
+#include <vector>
+#include <algorithm>
+#include <iomanip>
+
+using namespace std;
+
+struct Item {
+    string name;
+    double weight;
+    double value;
+    bool divisible;
+    int priority;
+
+    double valuePerWeight() {
+        return value / weight;
+    }
+};
+
+bool compareItems(Item &a,Item &b) {
+    if (a.priority == b.priority)
+        return a.valuePerWeight() > b.valuePerWeight();
+    return a.priority < b.priority;
+}
+
+double fractionalKnapsack(vector<Item> &items, double capacity, double &totalWeight) {
+    sort(items.begin(), items.end(), compareItems);
+
+    double totalValue = 0.0;
+    totalWeight = 0.0;
+
+    cout << "\nItems selected for transport:\n";
+    for (auto &item : items) {
+        if (capacity <= 0) break;
+
+        double takenWeight = 0.0;
+        if (item.divisible) {
+            takenWeight = min(item.weight, capacity);
+        } else if (item.weight <= capacity) {
+            takenWeight = item.weight;
+        }
+
+        if (takenWeight > 0) {
+            double takenValue = item.valuePerWeight() * takenWeight;
+            totalValue += takenValue;
+            totalWeight += takenWeight;
+            capacity -= takenWeight;
+
+            cout << " - " << item.name << ": " << takenWeight << " kg, Utility = " << fixed << setprecision(2) << takenValue << ", Priority = " << item.priority << ", Type = " << (item.divisible ? "Divisible" : "Indivisible") << endl;
+        }
+    }
+    return totalValue;
+}
+
+int main() {
+    vector<Item> items = {
+        {"Medical Kits", 10, 100, false, 1},
+        {"Food Packets", 20, 60, true, 3},
+        {"Drinking Water", 30, 90, true, 2},
+        {"Blankets", 15, 45, false, 3},
+        {"Infant Formula", 5, 50, false, 1}
+    };
+
+    double capacity;
+    cout << "Enter maximum weight capacity of the boat (in kg): ";
+    cin >> capacity;
+
+    double totalWeight;
+    double totalUtility = fractionalKnapsack(items, capacity, totalWeight);
+
+    cout << "\n===== Result =====\n";
+    cout << "Total weight carried: " << totalWeight << " kg\n";
+    cout << "Total utility value carried: " <<  totalUtility << " units\n";
+
+    return 0;
+}
+
+
+
+
+
+sorting takes O(nlogn)
+fractional takes O(n)
+overall O(nlogn)
+Greedy
+space O(n)
